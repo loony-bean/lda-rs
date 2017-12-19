@@ -1,0 +1,16 @@
+[package]
+name = "lda"
+version = "0.1.0"
+authors = ["Alexey Suslov <alexey.suslov@gmail.com>"]
+
+[dependencies]
+itertools = "0.7.4"
+rand = "0.4.1"
+ordermap = "0.3.4"
+ndarray-rand = "0.7.0"
+ndarray = "0.11.0"
+fastapprox = { git = "https://github.com/loony-bean/fastapprox-rs", branch = "master" }
+
+[dev-dependencies]
+regex = "0.2.5"
+wikipedia = { git = "https://github.com/loony-bean/wikipedia-rs", branch = "failure" }
