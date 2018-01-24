@@ -54,9 +54,10 @@ fn test_brocolli() {
         baseball practice health experts suggest increased tension blood pressure \
         feel perform well school seems better professionals say";
 
-    let mut vocab = HashBidiMap::new();
-    let words: Vec<_> = words.split(' ').zip((0..)).collect();
-    vocab.extend(words);
+    let vocab: HashBidiMap<&str, usize> = words
+        .split(' ')
+        .zip((0..))
+        .collect();
 
     let d = docset.len();
     let w = vocab.len();
