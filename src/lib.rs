@@ -31,6 +31,7 @@ pub struct OnlineLDA {
     // A (positive) learning parameter that downweights early iterations
     tau0: f32,
     // Learning rate: exponential decay rate
+    // should be between (0.5, 1.0] to guarantee asymptotic convergence.
     kappa: f32,
     // Weight in mini-batch
     rhot: f32,
@@ -43,6 +44,85 @@ pub struct OnlineLDA {
     elogbeta: Array2<f32>,
     // exp(E[log(beta)])
     expelogbeta: Array2<f32>,
+}
+
+pub struct OnlineLDABuilder {
+    rng: StdRng,
+    // Vocabulary size
+    w: usize,
+    // Number of topics
+    k: usize,
+    // Total number of documents in the population
+    d: usize,
+    // Hyperparameter for prior on weight vectors theta
+    alpha: f32,
+    // Hyperparameter for prior on topics beta
+    eta: f32,
+    // A (positive) learning parameter that downweights early iterations
+    tau0: f32,
+    // Learning rate: exponential decay rate
+    // should be between (0.5, 1.0] to guarantee asymptotic convergence.
+    kappa: f32,
+}
+
+impl OnlineLDABuilder {
+    pub fn new(w: usize, d: usize, k: usize) -> Self {
+        let seed: &[_] = &[0, 0, 0, 1];
+        let rng = SeedableRng::from_seed(seed);
+
+        Self {
+            rng,
+            w,
+            d,
+            k,
+            alpha: 1.0 / k as f32,
+            eta: 1.0 / k as f32,
+            tau0: 1025.0,
+            kappa: 0.7,
+        }
+    }
+
+    pub fn alpha<'a>(&'a mut self, alpha: f32) -> &'a mut Self {
+        self.alpha = alpha;
+        self
+    }
+
+    pub fn eta<'a>(&'a mut self, eta: f32) -> &'a mut Self {
+        self.eta = eta;
+        self
+    }
+
+    pub fn tau0<'a>(&'a mut self, tau0: f32) -> &'a mut Self {
+        self.tau0 = tau0;
+        self
+    }
+
+    pub fn kappa<'a>(&'a mut self, kappa: f32) -> &'a mut Self {
+        self.kappa = kappa;
+        self
+    }
+
+    pub fn build(&mut self) -> OnlineLDA {
+        let lambda = math::random_gamma_array_2d(100.0, 0.01, self.k, self.w, &mut self.rng);
+        let elogbeta = math::dirichlet_expectation_2d(&lambda);
+        let expelogbeta = math::exp_dirichlet_expectation_2d(&lambda);
+
+        OnlineLDA {
+            rng: self.rng,
+            w: self.w,
+            d: self.d,
+            k: self.k,
+            alpha: self.alpha,
+            eta: self.eta,
+            tau0: self.tau0,
+            kappa: self.kappa,
+            rhot: 0.0,
+            updatect: 0.0,
+            lambda,
+            elogbeta,
+            expelogbeta,
+        }
+    }
 }
 
 impl OnlineLDA {

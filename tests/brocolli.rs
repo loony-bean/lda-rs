@@ -47,7 +47,7 @@ fn test_brocolli() {
         "My mother spends a lot of time driving my brother around to baseball practice.",
         "Some health experts suggest that driving may cause increased tension and blood pressure.",
         "I often feel pressure to perform well at school, but my mother never seems to drive my brother to do better.",
-        "Health professionals say that brocolli is good for your health."        
+        "Health professionals say that brocolli is good for your health."
     ];
 
     let words = "brocolli good eat brother mother spends time driving around \
@@ -62,12 +62,8 @@ fn test_brocolli() {
     let d = docset.len();
     let w = vocab.len();
     let k = 2;
-    let alpha = 1.0 / k as f32;
-    let eta = 1.0 / k as f32;
-    let tau0 = 1025.0;
-    let kappa = 0.7;
 
-    let mut olda = lda::OnlineLDA::new(w, k, d, alpha, eta, tau0, kappa);
+    let mut olda = lda::OnlineLDABuilder::new(w, d, k).build();
 
     let mut perplexity = 0.0;
     for _it in 0..20 {
