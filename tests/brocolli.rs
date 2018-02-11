@@ -8,15 +8,18 @@ extern crate bidimap;
 
 use ordermap::OrderMap;
 use ndarray::{Array2, Axis};
-use regex::Regex;
 use bidimap::{HashBidiMap, BidiMap, MapLike};
 
 fn parse_doc(text: &str, vocab: &HashBidiMap<&str, usize>) -> lda::Document {
     let mut ddict = OrderMap::new();
-    let re_split = Regex::new(r"[^a-zA-Z]+").unwrap();
-    let norm_text = Regex::new(r"[\.']").unwrap().replace_all(text, "").to_lowercase();
-    for word in re_split.split(&norm_text[..]) {
-        if let Some(idx) = vocab.as_map().get(&word) {
+
+    let words = text
+        .split(|c: char| !c.is_alphabetic())
+        .filter(|s| s.len() > 0)
+        .map(|s| s.to_lowercase());
+
+    for word in words {
+        if let Some(idx) = vocab.as_map().get(&word.as_ref()) {
             *ddict.entry(*idx).or_insert(0_f32) += 1_f32;
         }
     }
