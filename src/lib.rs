@@ -8,12 +8,33 @@ use rand::{StdRng, SeedableRng};
 
 use std::f32;
 use ordermap::OrderMap;
+use std::iter::FromIterator;
 
 mod math;
 
 #[derive(Debug)]
 pub struct Document {
     pub words: OrderMap<usize, f32>,
+}
+
+impl Document {
+    pub fn new() -> Self {
+        Self {
+            words: OrderMap::new(),
+        }
+    }
+}
+
+impl<'a> FromIterator<&'a usize> for Document {
+    fn from_iter<I: IntoIterator<Item=&'a usize>>(iter: I) -> Self {
+        let mut doc = Self::new();
+
+        for i in iter {
+            *doc.words.entry(*i).or_insert(0_f32) += 1_f32;
+        }
+
+        doc
+    }
 }
 
 pub struct OnlineLDA {

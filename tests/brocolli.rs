@@ -6,25 +6,19 @@ extern crate ordermap;
 extern crate ndarray;
 extern crate bidimap;
 
-use ordermap::OrderMap;
+use std::collections::HashMap;
+
 use ndarray::{Array2, Axis};
-use bidimap::{HashBidiMap, BidiMap, MapLike};
+use bidimap::{HashBidiMap, BidiMap};
 
-fn parse_doc(text: &str, vocab: &HashBidiMap<&str, usize>) -> lda::Document {
-    let mut ddict = OrderMap::new();
-
+fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
     let words = text
         .split(|c: char| !c.is_alphabetic())
         .filter(|s| s.len() > 0)
-        .map(|s| s.to_lowercase());
+        .map(|s| s.to_lowercase())
+        .filter_map(|s| vocab.get(&*s));
 
-    for word in words {
-        if let Some(idx) = vocab.as_map().get(&word.as_ref()) {
-            *ddict.entry(*idx).or_insert(0_f32) += 1_f32;
-        }
-    }
-
-    lda::Document { words: ddict }
+    words.collect()
 }
 
 fn get_topic<'a>(lambda: &Array2<f32>, idx: usize, vocab: &'a HashBidiMap<&str, usize>, n: usize) -> Vec<(&'a str, f32)> {
@@ -62,6 +56,11 @@ fn test_brocolli() {
         .zip((0..))
         .collect();
 
+    let v: HashMap<&str, usize> = words
+        .split(' ')
+        .zip((0..))
+        .collect();
+
     let d = docset.len();
     let w = vocab.len();
     let k = 2;
@@ -71,7 +70,7 @@ fn test_brocolli() {
     let mut perplexity = 0.0;
     for _it in 0..20 {
         for text in docset.iter() {
-            let doc = parse_doc(text, &vocab);
+            let doc = parse_doc(text, &v);
             perplexity = olda.update_lambda_docs(&[doc]);
         }
     }
