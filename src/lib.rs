@@ -224,7 +224,7 @@ impl OnlineLDA {
         score
     }
 
-    pub fn do_e_step_docs(&mut self, docs: &[Document]) -> (Array2<f32>, Array2<f32>) {
+    fn do_e_step_docs(&mut self, docs: &[Document]) -> (Array2<f32>, Array2<f32>) {
         let batch_d = docs.len();
 
         // Initialize the variational distribution q(theta|gamma) for
@@ -284,5 +284,18 @@ impl OnlineLDA {
 
     pub fn lambda(&self) -> &Array2<f32> {
         &self.lambda
+    }
+
+    pub fn get_topic_top_n<'a>(&self, k: usize, n: usize) -> Vec<(usize, f32)> {
+        let row = self.lambda.select(Axis(0), &[k]);
+        let sumk: f32 = row.into_iter().sum();
+        let mut w: Vec<(usize, f32)> = row.into_iter().cloned().enumerate().collect();
+        w.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        w.truncate(n);
+        let mapped: Vec<_> = w.iter()
+            .map(|&(idx, p)| (idx, p / sumk))
+            .collect();
+
+        mapped
     }
 }

@@ -4,12 +4,8 @@ extern crate lda;
 extern crate regex;
 extern crate ordermap;
 extern crate ndarray;
-extern crate bidimap;
 
 use std::collections::HashMap;
-
-use ndarray::{Array2, Axis};
-use bidimap::{HashBidiMap, BidiMap};
 
 fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
     let words = text
@@ -21,17 +17,10 @@ fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
     words.collect()
 }
 
-fn get_topic<'a>(lambda: &Array2<f32>, idx: usize, vocab: &'a HashBidiMap<&str, usize>, n: usize) -> Vec<(&'a str, f32)> {
-    let row = lambda.select(Axis(0), &[idx]);
-    let sumk: f32 = row.into_iter().sum();
-    let mut w: Vec<(usize, f32)> = row.into_iter().cloned().enumerate().collect();
-    w.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-    w.truncate(n);
-    let mapped: Vec<_> = w.iter()
-        .map(|&(idx, p)| (vocab.as_inv_map()[idx], p / sumk))
-        .collect();
-
-    mapped
+fn parse_topic<'a>(topic: &Vec<(usize, f32)>, vocab: &'a HashMap<usize, &str>) -> Vec<(&'a str, f32)> {
+    topic.iter()
+        .map(|&(idx, p)| (vocab[&idx], p))
+        .collect()
 }
 
 #[test]
@@ -51,18 +40,15 @@ fn test_brocolli() {
         baseball practice health experts suggest increased tension blood pressure \
         feel perform well school seems better professionals say";
 
-    let vocab: HashBidiMap<&str, usize> = words
-        .split(' ')
-        .zip((0..))
-        .collect();
-
     let v: HashMap<&str, usize> = words
         .split(' ')
         .zip((0..))
         .collect();
 
+    let v_inv: HashMap<usize, &str> = v.iter().map(|(a, b)| (*b, *a)).collect();
+
     let d = docset.len();
-    let w = vocab.len();
+    let w = v.len();
     let k = 2;
 
     let mut olda = lda::OnlineLDABuilder::new(w, d, k).build();
@@ -83,7 +69,7 @@ fn test_brocolli() {
         ("professionals", 0.0508212),
         ("brocolli", 0.04943107),
         ("suggest", 0.048369262)],
-        get_topic(olda.lambda(), 0, &vocab, 5));
+        parse_topic(&olda.get_topic_top_n(0, 5), &v_inv));
 
     assert_eq!(vec![
         ("brother", 0.07146024),
@@ -91,5 +77,5 @@ fn test_brocolli() {
         ("brocolli", 0.055741135),
         ("good", 0.05528625),
         ("eat", 0.054417454)],
-        get_topic(olda.lambda(), 1, &vocab, 5));
+        parse_topic(&olda.get_topic_top_n(1, 5), &v_inv));
 }
