@@ -9,29 +9,19 @@ extern crate lda;
 
 use ndarray::Array2;
 
-use regex::Regex;
-
 use std::path::Path;
 use std::fs;
 use std::fs::File;
 use std::io::Read;
 use std::collections::hash_map::HashMap;
-use ordermap::OrderMap;
 
 fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
-    let mut ddict = OrderMap::new();
-    let re_split = Regex::new(r"[^a-zA-Z]+").unwrap();
-    let norm_text = Regex::new(r"[\.']").unwrap().replace_all(text, "").to_lowercase();
-    for word in re_split.split(&norm_text[..]) {
-        if vocab.contains_key(word) {
-            let idx = vocab.get(word).unwrap();
-            *ddict.entry(*idx).or_insert(0_f32) += 1_f32;
-        } else {
-            // oow, skip
-        }
-    }
+    let words = text
+        .split(|c: char| !c.is_alphabetic())
+        .map(|s| s.to_lowercase())
+        .filter_map(|s| vocab.get(&*s));
 
-    lda::Document { words: ddict }
+    words.collect()
 }
 
 fn print_topics(lambda: &Array2<f32>, vocab: &HashMap<usize, &str>, n: usize) -> () {
@@ -64,7 +54,8 @@ fn read_file(path: &Path) -> String {
 
 fn main() {
     // vocabulary
-    let text = read_file(Path::new("./examples/dictnostops.txt"));
+    let text = include_str!("dictnostops.txt");
+
     let vocab: HashMap<&str, usize> = text.split('\n').zip((0..)).collect();
     let vocab2: HashMap<usize, &str> = text.split('\n').enumerate().collect();
 

@@ -10,7 +10,6 @@ use std::collections::HashMap;
 fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
     let words = text
         .split(|c: char| !c.is_alphabetic())
-        .filter(|s| s.len() > 0)
         .map(|s| s.to_lowercase())
         .filter_map(|s| vocab.get(&*s));
 
