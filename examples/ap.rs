@@ -43,11 +43,11 @@ fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
         .collect()
 }
 
-fn read_file(path: &Path) -> String {
-    let mut f = File::open(path).unwrap();
+fn read_file(path: &Path) -> Result<String, io::Error> {
+    let mut f = File::open(path)?;
     let mut text = String::new();
-    f.read_to_string(&mut text).unwrap();
-    text
+    f.read_to_string(&mut text)?;
+    Ok(text)
 }
 
 fn read_dir(path: &str) -> Result<Vec<PathBuf>, io::Error> {
@@ -67,21 +67,17 @@ fn main() {
     let vocab2: HashMap<usize, &str> = text.split('\n').enumerate().collect();
 
     // settings
-    let d = 1000;
     let w = vocab.len();
+    let d = 1000;
     let k = 10; // The number of topics
-    let alpha = 1.0 / k as f32;
-    let eta = 1.0 / k as f32;
-    let tau0 = 1025.0;
-    let kappa = 0.7;
 
     // init
-    let mut olda = lda::OnlineLDA::new(w, k, d, alpha, eta, tau0, kappa);
+    let mut olda = lda::OnlineLDABuilder::new(w, d, k).build();
 
     // feed data
     let dir = read_dir("./examples/data").expect("found example data");
     for (it, path) in dir.iter().take(d).enumerate() {
-        let text = read_file(&path);
+        let text = read_file(&path).expect("read file content");
         let doc = parse_doc(text.as_str(), &vocab);
 
         let perplexity = olda.update_lambda_docs(&[doc]);
