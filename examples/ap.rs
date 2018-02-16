@@ -7,42 +7,40 @@ extern crate ndarray;
 
 extern crate lda;
 
-use ndarray::Array2;
-
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs;
 use std::fs::File;
+use std::io;
 use std::io::Read;
 use std::collections::hash_map::HashMap;
+use std::fmt::{Display, Formatter, Error as FmtError};
+use std::hash::Hash;
 
-fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
-    let words = text
-        .split(|c: char| !c.is_alphabetic())
-        .map(|s| s.to_lowercase())
-        .filter_map(|s| vocab.get(&*s));
+struct Topic<T> (Vec<(T, f32)>);
 
-    words.collect()
+impl<T> Topic<T> where T: Eq + Hash {
+    fn translate<'a, A>(&self, vocab: &'a HashMap<T, A>) -> Topic<&'a A> {
+        Topic(self.0.iter()
+            .map(|&(ref idx, p)| (&vocab[idx], p))
+            .collect())
+    }
 }
 
-fn print_topics(lambda: &Array2<f32>, vocab: &HashMap<usize, &str>, n: usize) -> () {
-    let mut iteration = 0;
-    for row in lambda.genrows() {
-        let lambdak = row.clone().to_vec();
-        let sumk: f32 = lambdak.iter().sum();
-        let mut w: Vec<(usize, f32)> = lambdak.into_iter().enumerate().collect();
-        w.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        w.truncate(n);
-        let mapped: Vec<_> = w.iter()
-            .map(|&(idx, p)| (vocab.get(&idx).unwrap(), p / sumk))
-            .collect();
-
-        iteration += 1;
-        println!("topic {}:", iteration);
-        for (k, p) in mapped.into_iter() {
-            println!("  {0: <20}  \t---\t  {1:.4}", k, p);
+impl<T: Display> Display for Topic<T> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        for &(ref k, p) in self.0.iter() {
+            write!(f, "  {0: <20}  \t---\t  {1:.4}\n", k, p)?;
         }
-        println!("");
+        Ok(())
     }
+}
+
+fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
+    text
+        .split(|c: char| !c.is_alphabetic())
+        .map(|s| s.to_lowercase())
+        .filter_map(|s| vocab.get(&*s))
+        .collect()
 }
 
 fn read_file(path: &Path) -> String {
@@ -50,6 +48,15 @@ fn read_file(path: &Path) -> String {
     let mut text = String::new();
     f.read_to_string(&mut text).unwrap();
     text
+}
+
+fn read_dir(path: &str) -> Result<Vec<PathBuf>, io::Error> {
+    let dir = fs::read_dir(path)?;
+    let mut result = Vec::new();
+    for entry in dir {
+        result.push(entry?.path());
+    }
+    Ok(result)
 }
 
 fn main() {
@@ -72,9 +79,8 @@ fn main() {
     let mut olda = lda::OnlineLDA::new(w, k, d, alpha, eta, tau0, kappa);
 
     // feed data
-    let dir = fs::read_dir("./examples/data").unwrap();
-    for (it, entry) in dir.take(d).enumerate() {
-        let path = entry.unwrap().path();
+    let dir = read_dir("./examples/data").expect("found example data");
+    for (it, path) in dir.iter().take(d).enumerate() {
         let text = read_file(&path);
         let doc = parse_doc(text.as_str(), &vocab);
 
@@ -82,5 +88,10 @@ fn main() {
         println!("{}: held-out perplexity estimate = {}", it, perplexity);
     }
 
-    print_topics(olda.lambda(), &vocab2, 10);
+    // print topics
+    for idx in 0..k {
+        let topic = Topic(olda.get_topic_top_n(idx, 10));
+        let topic = topic.translate(&vocab2);
+        println!("topic {}:\n{}", idx, topic);
+    }
 }
