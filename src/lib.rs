@@ -282,10 +282,6 @@ impl OnlineLDA {
         (gamma, sstats)
     }
 
-    pub fn lambda(&self) -> &Array2<f32> {
-        &self.lambda
-    }
-
     pub fn get_topic_top_n<'a>(&self, k: usize, n: usize) -> Vec<(usize, f32)> {
         let row = self.lambda.select(Axis(0), &[k]);
         let sumk: f32 = row.into_iter().sum();

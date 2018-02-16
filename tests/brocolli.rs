@@ -46,8 +46,8 @@ fn test_brocolli() {
 
     let v_inv: HashMap<usize, &str> = v.iter().map(|(a, b)| (*b, *a)).collect();
 
-    let d = docset.len();
     let w = v.len();
+    let d = docset.len();
     let k = 2;
 
     let mut olda = lda::OnlineLDABuilder::new(w, d, k).build();

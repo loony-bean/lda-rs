@@ -7,39 +7,37 @@ extern crate ndarray;
 
 extern crate lda;
 
-use ndarray::Array2;
-
 use regex::Regex;
 use std::collections::hash_map::HashMap;
 
-fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
-    let words = text
-        .split(|c: char| !c.is_alphabetic())
-        .map(|s| s.to_lowercase())
-        .filter_map(|s| vocab.get(&*s));
+use std::fmt::{Display, Formatter, Error as FmtError};
+use std::hash::Hash;
 
-    words.collect()
+struct Topic<T> (Vec<(T, f32)>);
+
+impl<T> Topic<T> where T: Eq + Hash {
+    fn translate<'a, A>(&self, vocab: &'a HashMap<T, A>) -> Topic<&'a A> {
+        Topic(self.0.iter()
+            .map(|&(ref idx, p)| (&vocab[idx], p))
+            .collect())
+    }
 }
 
-fn print_topics(lambda: &Array2<f32>, vocab: &HashMap<usize, &str>, n: usize) -> () {
-    let mut iteration = 0;
-    for row in lambda.genrows() {
-        let lambdak = row.clone().to_vec();
-        let sumk: f32 = lambdak.iter().sum();
-        let mut w: Vec<(usize, f32)> = lambdak.into_iter().enumerate().collect();
-        w.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        w.truncate(n);
-        let mapped: Vec<_> = w.iter()
-            .map(|&(idx, p)| (vocab.get(&idx).unwrap(), p / sumk))
-            .collect();
-
-        iteration += 1;
-        println!("topic {}:", iteration);
-        for (k, p) in mapped.into_iter() {
-            println!("  {0: <20}  \t---\t  {1:.4}", k, p);
+impl<T: Display> Display for Topic<T> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        for &(ref k, p) in self.0.iter() {
+            write!(f, "  {0: <20}  \t---\t  {1:.4}\n", k, p)?;
         }
-        println!("");
+        Ok(())
     }
+}
+
+fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
+    text
+        .split(|c: char| !c.is_alphabetic())
+        .map(|s| s.to_lowercase())
+        .filter_map(|s| vocab.get(&*s))
+        .collect()
 }
 
 fn unwiki(content: &str) -> String {
@@ -92,16 +90,12 @@ fn main() {
     let vocab2: HashMap<usize, &str> = text.split('\n').enumerate().collect();
 
     // settings
-    let d = 3300000;
     let w = vocab.len();
+    let d = 3300000;
     let k = 10; // The number of topics
-    let alpha = 1.0 / k as f32;
-    let eta = 1.0 / k as f32;
-    let tau0 = 1025.0;
-    let kappa = 0.7;
 
     // init
-    let mut olda = lda::OnlineLDA::new(w, k, d, alpha, eta, tau0, kappa);
+    let mut olda = lda::OnlineLDABuilder::new(w, d, k).build();
 
     // feed data
     for it in 1..10 {
@@ -120,5 +114,10 @@ fn main() {
         println!("{}: held-out perplexity estimate = {}", it * batch_size, perplexity);
     }
 
-    print_topics(olda.lambda(), &vocab2, 10);
+    // print topics
+    for idx in 0..k {
+        let topic = Topic(olda.get_topic_top_n(idx, 10));
+        let topic = topic.translate(&vocab2);
+        println!("topic {}:\n{}", idx, topic);
+    }
 }
