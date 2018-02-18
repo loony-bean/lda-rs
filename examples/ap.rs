@@ -1,10 +1,3 @@
-extern crate wikipedia;
-
-extern crate itertools;
-extern crate regex;
-extern crate ordermap;
-extern crate ndarray;
-
 extern crate lda;
 
 use std::path::{Path, PathBuf};

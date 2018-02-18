@@ -1,9 +1,6 @@
 #![cfg(test)]
 
 extern crate lda;
-extern crate regex;
-extern crate ordermap;
-extern crate ndarray;
 
 use std::collections::HashMap;
 

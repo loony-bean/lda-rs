@@ -1,26 +1,25 @@
-extern crate itertools;
 extern crate rand;
-extern crate ordermap;
+extern crate indexmap;
 extern crate ndarray;
 
 use ndarray::{Array, Array1, Array2, Axis, Zip};
 use rand::{StdRng, SeedableRng};
 
 use std::f32;
-use ordermap::OrderMap;
+use indexmap::IndexMap;
 use std::iter::FromIterator;
 
 mod math;
 
 #[derive(Debug)]
 pub struct Document {
-    pub words: OrderMap<usize, f32>,
+    pub words: IndexMap<usize, f32>,
 }
 
 impl Document {
     pub fn new() -> Self {
         Self {
-            words: OrderMap::new(),
+            words: IndexMap::new(),
         }
     }
 }

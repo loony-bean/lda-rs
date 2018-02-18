@@ -4,9 +4,8 @@ version = "0.1.0"
 authors = ["Alexey Suslov <alexey.suslov@gmail.com>"]
 
 [dependencies]
-itertools = "0.7.4"
 rand = "0.4.1"
-ordermap = "0.3.4"
+indexmap = "0.4.1"
 ndarray-rand = "0.7.0"
 ndarray = "0.11.0"
 fastapprox = "0.1.0"
