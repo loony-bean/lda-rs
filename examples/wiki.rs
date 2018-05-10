@@ -81,7 +81,7 @@ fn get_random_wikipedia_articles(count: usize) -> Vec<(String, String)> {
 fn main() {
     // vocabulary
     let text = include_str!("dictnostops.txt");
-    let vocab: HashMap<&str, usize> = text.split('\n').zip((0..)).collect();
+    let vocab: HashMap<&str, usize> = text.split('\n').zip(0..).collect();
     let vocab2: HashMap<usize, &str> = text.split('\n').enumerate().collect();
 
     // settings

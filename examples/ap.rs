@@ -55,7 +55,7 @@ fn read_dir(path: &str) -> Result<Vec<PathBuf>, io::Error> {
 fn main() {
     // vocabulary
     let text = include_str!("dictnostops.txt");
-    let vocab: HashMap<&str, usize> = text.split('\n').zip((0..)).collect();
+    let vocab: HashMap<&str, usize> = text.split('\n').zip(0..).collect();
     let vocab2: HashMap<usize, &str> = text.split('\n').enumerate().collect();
 
     // settings
