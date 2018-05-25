@@ -38,7 +38,7 @@ fn test_brocolli() {
 
     let v: HashMap<&str, usize> = words
         .split(' ')
-        .zip((0..))
+        .zip(0..)
         .collect();
 
     let v_inv: HashMap<usize, &str> = v.iter().map(|(a, b)| (*b, *a)).collect();

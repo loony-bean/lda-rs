@@ -1,4 +1,5 @@
 extern crate lda;
+extern crate textplots;
 
 use std::path::{Path, PathBuf};
 use std::fs;
@@ -8,6 +9,8 @@ use std::io::Read;
 use std::collections::hash_map::HashMap;
 use std::fmt::{Display, Formatter, Error as FmtError};
 use std::hash::Hash;
+
+use textplots::{Chart, Plot, utils};
 
 struct Topic<T> (Vec<(T, f32)>);
 
@@ -67,6 +70,7 @@ fn main() {
     let mut olda = lda::OnlineLDABuilder::new(w, d, k).build();
 
     // feed data
+    let mut plot = Vec::new();
     let dir = read_dir("./examples/data").expect("found example data");
     for (it, path) in dir.iter().take(d).enumerate() {
         let text = read_file(&path).expect("read file content");
@@ -74,9 +78,15 @@ fn main() {
 
         let perplexity = olda.update_lambda_docs(&[doc]);
         println!("{}: held-out perplexity estimate = {}", it, perplexity);
+        plot.push((it as f32, f32::min(perplexity, 10_000.0).ln() ));
     }
 
-    // print topics
+    println!("\nlog-perplexity plot:");
+    Chart::new(160, 120, 0.0, d as f32)
+        .lineplot(utils::interpolate(&plot))
+        .display();
+
+    println!("\nprint topics:");
     for idx in 0..k {
         let topic = Topic(olda.get_topic_top_n(idx, 10));
         let topic = topic.translate(&vocab2);
