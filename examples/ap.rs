@@ -12,7 +12,7 @@ use std::hash::Hash;
 
 use textplots::{Chart, Plot, utils};
 
-struct Topic<T> (Vec<(T, f32)>);
+struct Topic<T> (Vec<(T, f64)>);
 
 impl<T> Topic<T> where T: Eq + Hash {
     fn translate<'a, A>(&self, vocab: &'a HashMap<T, A>) -> Topic<&'a A> {
@@ -78,7 +78,7 @@ fn main() {
 
         let perplexity = olda.update_lambda_docs(&[doc]);
         println!("{}: held-out perplexity estimate = {}", it, perplexity);
-        plot.push((it as f32, f32::min(perplexity, 10_000.0).ln() ));
+        plot.push((it as f32, f32::min(perplexity as f32, 10_000.0).ln() ));
     }
 
     println!("\nlog-perplexity plot:");

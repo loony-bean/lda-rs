@@ -13,7 +13,7 @@ fn parse_doc(text: &str, vocab: &HashMap<&str, usize>) -> lda::Document {
     words.collect()
 }
 
-fn parse_topic<'a>(topic: &Vec<(usize, f32)>, vocab: &'a HashMap<usize, &str>) -> Vec<(&'a str, f32)> {
+fn parse_topic<'a>(topic: &Vec<(usize, f64)>, vocab: &'a HashMap<usize, &str>) -> Vec<(&'a str, f64)> {
     topic.iter()
         .map(|&(idx, p)| (vocab[&idx], p))
         .collect()
@@ -57,21 +57,21 @@ fn test_brocolli() {
         }
     }
 
-    assert_eq!(perplexity, 49.734325);
+    assert_eq!(perplexity, 49.73295595466903);
 
     assert_eq!(vec![
-        ("mother", 0.06811236),
-        ("brocolli", 0.067197174),
-        ("good", 0.06263606),
-        ("brother", 0.06259648),
-        ("eat", 0.061192695)],
+        ("mother", 0.0681133298260731),
+        ("brocolli", 0.06719691469104086),
+        ("good", 0.06263564702005898),
+        ("brother", 0.06259714686274334),
+        ("eat", 0.061192048549040645)],
         parse_topic(&olda.get_topic_top_n(0, 5), &v_inv));
 
     assert_eq!(vec![
-        ("health", 0.077420026),
-        ("driving", 0.058776595),
-        ("experts", 0.04430489),
-        ("say", 0.0424421),
-        ("tension", 0.0420059)],
+        ("health", 0.07742025633047694),
+        ("driving", 0.05877647345180614),
+        ("experts", 0.044305156048863176),
+        ("say", 0.04244217568962596),
+        ("tension", 0.04200615508025107)],
         parse_topic(&olda.get_topic_top_n(1, 5), &v_inv));
 }

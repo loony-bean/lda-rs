@@ -8,7 +8,7 @@ use std::collections::hash_map::HashMap;
 use std::fmt::{Display, Formatter, Error as FmtError};
 use std::hash::Hash;
 
-struct Topic<T> (Vec<(T, f32)>);
+struct Topic<T> (Vec<(T, f64)>);
 
 impl<T> Topic<T> where T: Eq + Hash {
     fn translate<'a, A>(&self, vocab: &'a HashMap<T, A>) -> Topic<&'a A> {
