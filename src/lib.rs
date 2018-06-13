@@ -1,9 +1,9 @@
-extern crate rand;
 extern crate indexmap;
 extern crate ndarray;
+extern crate randomkit;
 
 use ndarray::{Array, Array1, Array2, Axis, Zip};
-use rand::{StdRng, SeedableRng};
+use randomkit::Rng;
 
 use std::f32;
 use indexmap::IndexMap;
@@ -37,7 +37,7 @@ impl<'a> FromIterator<&'a usize> for Document {
 }
 
 pub struct OnlineLDA {
-    rng: StdRng,
+    rng: Rng,
     // Vocabulary size
     w: usize,
     // Number of topics
@@ -67,7 +67,6 @@ pub struct OnlineLDA {
 }
 
 pub struct OnlineLDABuilder {
-    rng: StdRng,
     // Vocabulary size
     w: usize,
     // Number of topics
@@ -87,11 +86,7 @@ pub struct OnlineLDABuilder {
 
 impl OnlineLDABuilder {
     pub fn new(w: usize, d: usize, k: usize) -> Self {
-        let seed: &[_] = &[0, 0, 0, 1];
-        let rng = SeedableRng::from_seed(seed);
-
         Self {
-            rng,
             w,
             d,
             k,
@@ -123,12 +118,13 @@ impl OnlineLDABuilder {
     }
 
     pub fn build(&mut self) -> OnlineLDA {
-        let lambda = math::random_gamma_array_2d(100.0, 0.01, self.k, self.w, &mut self.rng);
+        let mut rng = Rng::from_seed(1);
+        let lambda = math::random_gamma_array_2d(100.0, 0.01, self.k, self.w, &mut rng);
         let elogbeta = math::dirichlet_expectation_2d(&lambda);
         let expelogbeta = math::exp_dirichlet_expectation_2d(&lambda);
 
         OnlineLDA {
-            rng: self.rng,
+            rng,
             w: self.w,
             d: self.d,
             k: self.k,
@@ -147,8 +143,7 @@ impl OnlineLDABuilder {
 
 impl OnlineLDA {
     pub fn new(w: usize, k: usize, d: usize, alpha: f32, eta: f32, tau0: f32, kappa: f32) -> Self {
-        let seed: &[_] = &[0, 0, 0, 1];
-        let mut rng = SeedableRng::from_seed(seed);
+        let mut rng = Rng::from_seed(1);
 
         let rhot = 0.0;
         let updatect = 0.0;

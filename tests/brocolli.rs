@@ -57,21 +57,21 @@ fn test_brocolli() {
         }
     }
 
-    assert_eq!(perplexity, 43.05503);
+    assert_eq!(perplexity, 49.734325);
 
     assert_eq!(vec![
-        ("health", 0.08495814),
-        ("say", 0.050945763),
-        ("professionals", 0.0508212),
-        ("brocolli", 0.04943107),
-        ("suggest", 0.048369262)],
+        ("mother", 0.06811236),
+        ("brocolli", 0.067197174),
+        ("good", 0.06263606),
+        ("brother", 0.06259648),
+        ("eat", 0.061192695)],
         parse_topic(&olda.get_topic_top_n(0, 5), &v_inv));
 
     assert_eq!(vec![
-        ("brother", 0.07146024),
-        ("mother", 0.06900988),
-        ("brocolli", 0.055741135),
-        ("good", 0.05528625),
-        ("eat", 0.054417454)],
+        ("health", 0.077420026),
+        ("driving", 0.058776595),
+        ("experts", 0.04430489),
+        ("say", 0.0424421),
+        ("tension", 0.0420059)],
         parse_topic(&olda.get_topic_top_n(1, 5), &v_inv));
 }

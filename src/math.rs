@@ -1,13 +1,11 @@
-extern crate rand;
 extern crate ndarray;
-extern crate ndarray_rand;
+extern crate randomkit;
 extern crate fastapprox;
 
-use rand::StdRng;
-use rand::distributions::Gamma;
+use randomkit::dist::Gamma;
+use randomkit::{Rng, Sample};
 
-use ndarray::{Array, Array1, Array2, Axis};
-use self::ndarray_rand::{RandomExt, F32};
+use ndarray::{Array1, Array2, Axis};
 
 use self::fastapprox::fast;
 
@@ -61,6 +59,7 @@ pub fn gammaln_2d(array: &Array2<f32>) -> Array2<f32> {
     array.mapv(fast::ln_gamma)
 }
 
-pub fn random_gamma_array_2d(shape: f64, scale: f64, rows: usize, cols: usize, rng: &mut StdRng) -> Array2<f32> {
-    Array::random_using((rows, cols), F32(Gamma::new(shape, scale)), rng)
+pub fn random_gamma_array_2d(shape: f64, scale: f64, rows: usize, cols: usize, rng: &mut Rng) -> Array2<f32> {
+    let dist = Gamma::new(shape, scale).unwrap();
+    Array2::from_shape_fn((rows, cols), |_| dist.sample(rng) as f32)
 }
