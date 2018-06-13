@@ -4,10 +4,9 @@ version = "0.1.1"
 authors = ["Alexey Suslov <alexey.suslov@gmail.com>"]
 
 [dependencies]
-rand = "0.4.1"
 indexmap = "1.0"
-ndarray-rand = "0.7.0"
 ndarray = "0.11.0"
+randomkit = "0.1"
 fastapprox = "0.2.0"
 
 [dev-dependencies]
